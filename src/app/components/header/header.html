@@ -1,0 +1,29 @@
+<nav class="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 bg-primary-600 rounded-xl flex items-center justify-center p-5">
+          <span class="text-white font-bold text-lg">WT</span>
+        </div>
+        <span class="font-bold text-xl text-gray-900">WireTrans</span>
+      </div>
+      <div class="hidden md:flex items-center space-x-8">
+        <a (click)="scrollToSection('features')" class="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+          Features
+        </a>
+        <a (click)="scrollToSection('how-it-works')" class="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+          How It Works
+        </a>
+        <a (click)="scrollToSection('security')" class="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+          Security
+        </a>
+        <a (click)="scrollToSection('testimonials')" class="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer">
+          Reviews
+        </a>
+        <button routerLink="/sign-in" class="border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-xl bg-transparent transition-colors">
+          Sign In
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

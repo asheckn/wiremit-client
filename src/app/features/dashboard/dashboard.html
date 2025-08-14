@@ -1,0 +1,282 @@
+
+<!-- Sidebar Component -->
+<app-sidebar
+  [currentUser]="currentUser"
+  (menuItemClick)="onMenuItemClick($event)"
+  (logoutClick)="logout()">
+</app-sidebar>
+
+<!-- Main Content Area -->
+<div class="min-h-screen mt-10 bg-slate-50 lg:ml-64 pb-20 lg:pb-0">
+
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Transfer Section (shown when transfer is active) -->
+    <div *ngIf="activeSection === 'transfer'">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Send Money Section -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Send Money</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Amount Input -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Amount (USD)</label>
+                <input
+                  type="number"
+                  [(ngModel)]="sendMoneyData.amount"
+                  (ngModelChange)="onAmountChange()"
+                  [min]="limits.min"
+                  [max]="limits.max"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Enter amount"
+                >
+                <p class="text-xs text-slate-500 mt-1">Min: ${{ limits.min }}, Max: ${{ limits.max }}</p>
+              </div>
+
+              <!-- Currency Selection -->
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Recipient Currency</label>
+                <select
+                  [(ngModel)]="sendMoneyData.currency"
+                  (ngModelChange)="onAmountChange()"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                >
+                  <option value="GBP">British Pound (GBP)</option>
+                  <option value="ZAR">South African Rand (ZAR)</option>
+                </select>
+              </div>
+
+              <!-- Recipient Name -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Recipient Name</label>
+                <input
+                  type="text"
+                  [(ngModel)]="sendMoneyData.recipient"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  placeholder="Enter recipient's full name"
+                >
+              </div>
+            </div>
+
+            <!-- Calculation Display -->
+            <div *ngIf="sendMoneyData.amount > 0" class="mt-6 p-4 bg-amber-50 rounded-lg">
+              <h3 class="font-semibold text-slate-800 mb-3">Transaction Summary</h3>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span>Amount to send:</span>
+                  <span class="font-medium">${{ sendMoneyData.amount }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Transaction fee ({{ sendMoneyData.currency === 'GBP' ? '10%' : '20%' }}):</span>
+                  <span class="font-medium">${{ calculatedFee }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Exchange rate:</span>
+                  <span class="font-medium">1 USD = {{ exchangeRate }} {{ sendMoneyData.currency }}</span>
+                </div>
+                <hr class="my-2">
+                <div class="flex justify-between text-lg font-bold">
+                  <span>Recipient receives:</span>
+                  <span class="text-amber-600">{{ calculatedFinalAmount }} {{ sendMoneyData.currency }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Send Button -->
+            <div class="mt-6">
+              <button
+                (click)="onSendMoney()"
+                [disabled]="sendingMoney || !sendMoneyData.amount || !sendMoneyData.recipient"
+                class="w-full bg-amber-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span *ngIf="!sendingMoney">Send Money Now</span>
+                <span *ngIf="sendingMoney" class="flex items-center justify-center">
+                  <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              </button>
+            </div>
+
+            <!-- Message Display -->
+            <div *ngIf="sendMoneyMessage" class="mt-4 p-3 rounded-lg"
+                 [ngClass]="sendMoneyMessage.includes('successfully') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+              <p [ngClass]="sendMoneyMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'" class="text-sm">
+                {{ sendMoneyMessage }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ads Section -->
+        <div>
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">Special Offers</h2>
+
+            <div *ngIf="ads.length > 0" class="relative">
+              <div class="overflow-hidden rounded-lg">
+                <img
+                  [src]="ads[currentAdIndex].imageUrl"
+                  [alt]="ads[currentAdIndex].title"
+                  class="w-full h-48 object-cover"
+                >
+                <div class="p-4 bg-gradient-to-t from-black/60 to-transparent absolute bottom-0 left-0 right-0 text-white">
+                  <h3 class="font-semibold">{{ ads[currentAdIndex].title }}</h3>
+                  <p class="text-sm opacity-90">{{ ads[currentAdIndex].description }}</p>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <button
+                (click)="prevAd()"
+                class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              <button
+                (click)="nextAd()"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-slate-800 p-2 rounded-full shadow-md transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+
+              <!-- Dots Indicator -->
+              <div class="flex justify-center mt-4 space-x-2">
+                <button
+                  *ngFor="let ad of ads; let i = index"
+                  (click)="currentAdIndex = i"
+                  class="w-2 h-2 rounded-full transition-colors"
+                  [ngClass]="i === currentAdIndex ? 'bg-amber-600' : 'bg-slate-300'"
+                ></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions Section -->
+    <div *ngIf="activeSection === 'transactions'">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">Transaction History</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+            <tr class="border-b border-slate-200">
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Date</th>
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Recipient</th>
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Amount</th>
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Fee</th>
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Final Amount</th>
+              <th class="text-left py-3 px-4 font-medium text-slate-700">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let transaction of transactions" class="border-b border-slate-100 hover:bg-slate-50">
+              <td class="py-3 px-4 text-sm text-slate-600">
+                {{ transaction.date | date:'MMM d, y' }}
+              </td>
+              <td class="py-3 px-4 text-sm font-medium text-slate-800">
+                {{ transaction.recipient }}
+              </td>
+              <td class="py-3 px-4 text-sm text-slate-600">
+                ${{ transaction.amount }}
+              </td>
+              <td class="py-3 px-4 text-sm text-slate-600">
+                ${{ transaction.fee }}
+              </td>
+              <td class="py-3 px-4 text-sm font-medium text-slate-800">
+                {{ transaction.finalAmount }} {{ transaction.currency }}
+              </td>
+              <td class="py-3 px-4">
+                  <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getStatusClass(transaction.status)">
+                    {{ transaction.status | titlecase }}
+                  </span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-6">
+          <div class="text-sm text-slate-600">
+            Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalTransactions) }} of {{ totalTransactions }} transactions
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="goToPage(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              class="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              *ngFor="let page of [].constructor(totalPages); let i = index"
+              (click)="goToPage(i + 1)"
+              [ngClass]="currentPage === i + 1 ? 'bg-amber-600 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'"
+              class="px-3 py-2 text-sm border border-slate-300 rounded-lg"
+            >
+              {{ i + 1 }}
+            </button>
+            <button
+              (click)="goToPage(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              class="px-3 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div *ngIf="activeSection === 'profile'">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">Profile</h2>
+        <div class="max-w-md">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+              <input type="text" [value]="currentUser?.name" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500" readonly>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <input type="email" [value]="currentUser?.email" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500" readonly>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Account Type</label>
+              <input type="text" [value]="currentUser?.role || 'User'" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Sections -->
+    <div *ngIf="activeSection === 'ads' && isAdmin">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">Manage Ads</h2>
+        <p class="text-slate-600">Ad management functionality coming soon...</p>
+      </div>
+    </div>
+
+    <div *ngIf="activeSection === 'users' && isAdmin">
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-6">Manage Users</h2>
+        <p class="text-slate-600">User management functionality coming soon...</p>
+      </div>
+    </div>
+  </div>
+</div>

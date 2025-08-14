@@ -1,0 +1,60 @@
+/* Custom animations for Angular component */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(217, 119, 6, 0.5);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Smooth scrolling for the entire component */
+:host {
+  scroll-behavior: smooth;
+}
+
+/* Custom hover effects */
+.hover\:-translate-y-2:hover {
+  transform: translateY(-8px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .animate-float {
+    animation: none; /* Disable float animation on mobile for better performance */
+  }
+}

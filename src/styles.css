@@ -1,2 +1,29 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+/* Define your custom shades 100–500 using OKLCH or HEX/HSL */
+@theme {
+  /* Primary - #004252 */
+  --color-primary-100: #e6f0f2;
+  --color-primary-200: #b3d6de;
+  --color-primary-300: #80bbc9;
+  --color-primary-400: #4da1b4;
+  --color-primary-500: #267f8f; /* base-ish close to #004252 */
+  --color-primary-600: #1f6672;
+  --color-primary-700: #174f55;
+  --color-primary-800: #103839;
+  --color-primary-900: #08201c;
+  --color-primary: #004252;
+
+  /* Secondary - #50b648 */
+  --color-secondary-100: #e6f6d8;
+  --color-secondary-200: #c1e8a7;
+  --color-secondary-300: #9dd976;
+  --color-secondary-400: #78cb45;
+  --color-secondary-500: #50b648; /* base */
+  --color-secondary-600: #42913a;
+  --color-secondary-700: #336d2d;
+  --color-secondary-800: #234920;
+  --color-secondary-900: #112410;
+  --color-secondary: #50b648;
+}
