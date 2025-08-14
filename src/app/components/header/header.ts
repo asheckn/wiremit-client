@@ -1,19 +1,25 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {RouterLink} from '@angular/router';
+import {AuthService} from '../../core/services/auth-service';
+import {NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-header',
   imports: [
-    RouterLink
+    RouterLink,
+    NgIf
   ],
   templateUrl: './header.html',
   styleUrl: './header.css'
 })
-export class Header {
+export class Header implements OnInit {
 
-  onSignIn(): void {
-    // Navigate to sign in page
-    console.log("Sign In clicked")
+
+  constructor(public authService: AuthService) {}
+
+  ngOnInit() {
+    // get logged in state
+
   }
 
   scrollToSection(sectionId: string): void {

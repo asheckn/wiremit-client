@@ -1,19 +1,25 @@
-import { Injectable } from '@angular/core';
+import {Injectable, OnInit} from '@angular/core';
 import {SendMoneyData, Transaction} from '../../types/transaction.model';
-import {Observable, of} from 'rxjs';
+import {catchError, Observable, of, tap, throwError} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
+import {environment} from '../../../../environments/environment';
+import {List} from 'postcss/lib/list';
 
 @Injectable({
   providedIn: 'root'
 })
-export class TransactionService {
-  private exchangeRates = {
-    GBP: 0.78, // 1 USD = 0.78 GBP
-    ZAR: 18.5, // 1 USD = 18.50 ZAR
-  }
+export class TransactionService  {
+  private exchangeRates:any = {}
 
   private feeRates = {
     GBP: 0.1, // 10%
     ZAR: 0.2, // 20%
+  }
+
+  private paymentMethodRates = {
+    card: 0.1, // 10%
+    paypal: 0.2, // 20%
+    ecocash: 0.15 // 15%
   }
 
   private mockTransactions: Transaction[] = [
@@ -53,28 +59,40 @@ export class TransactionService {
     })),
   ]
 
-  constructor() {
-    // Calculate fees and final amounts for mock data
-    this.mockTransactions = this.mockTransactions.map((transaction) => {
-      const fee = Math.ceil(transaction.amount * this.feeRates[transaction.currency])
-      const amountAfterFee = transaction.amount - fee
-      const finalAmount = Math.ceil(amountAfterFee * this.exchangeRates[transaction.currency])
+  constructor(private http: HttpClient) {
 
-      return {
-        ...transaction,
-        fee,
-        finalAmount,
+    this.getRates().subscribe({
+      next: (response) => {
+        console.log("Exchange rates initialized:", this.exchangeRates);
+        // Calculate fees and final amounts for mock data
+        this.mockTransactions = this.mockTransactions.map((transaction) => {
+          const fee = Math.ceil(transaction.amount * this.feeRates[transaction.currency])
+          const amountAfterFee = transaction.amount - fee
+          const finalAmount = Math.ceil(amountAfterFee * this.exchangeRates[transaction.currency])
+
+          return {
+            ...transaction,
+            fee,
+            finalAmount,
+          }
+        })
+
+      },
+      error: (error) => {
+        console.error("Failed to fetch exchange rates:", error);
       }
-    })
+    });
+
   }
 
-  calculateTransaction(data: SendMoneyData): { fee: number; finalAmount: number; exchangeRate: number } {
+  calculateTransaction(data: SendMoneyData): { fee: number; finalAmount: number; exchangeRate: number; paymentMethodFee: number } {
     const fee = Math.ceil(data.amount * this.feeRates[data.currency])
-    const amountAfterFee = data.amount - fee
+    const paymentMethodFee = Math.ceil(data.amount * this.paymentMethodRates[data.paymentMethod])
+    const amountAfterFee = data.amount - fee - paymentMethodFee
     const exchangeRate = this.exchangeRates[data.currency]
     const finalAmount = Math.ceil(amountAfterFee * exchangeRate)
 
-    return { fee, finalAmount, exchangeRate }
+    return { fee, finalAmount, exchangeRate, paymentMethodFee }
   }
 
   sendMoney(data: SendMoneyData): Observable<{ success: boolean; transaction?: Transaction }> {
@@ -115,5 +133,27 @@ export class TransactionService {
 
   getMinMaxLimits(): { min: number; max: number } {
     return { min: 10, max: 5000 }
+  }
+
+  getRates() {
+    console.log("Fetching exchange rates from API...");
+    return this.http.get("https://68976304250b078c2041c7fc.mockapi.io/api/wiremit/InterviewAPIS")
+      .pipe(
+        tap((response: any) => {
+          console.log("Fetched Values", response);
+          response
+            .filter((rateObj:any) => ['GBP', 'ZAR'].some(curr => curr in rateObj))
+            .forEach((rateObj:any) => {
+              const [key, value] = Object.entries(rateObj)[0];
+              this.exchangeRates[key as keyof typeof this.exchangeRates] = value;
+            });
+
+          console.log("Updated exchange rates:", this.exchangeRates);
+        }),
+        catchError((error) => {
+          console.error("Error fetching rates:", error);
+          return of([]);
+        })
+      );
   }
 }

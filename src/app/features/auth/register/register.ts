@@ -1,71 +1,63 @@
 import { Component } from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {FormsModule} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {SignUpData} from '../../../core/types/user.model';
 import {Router, RouterLink} from '@angular/router';
 import {AuthService} from '../../../core/services/auth-service';
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ReactiveFormsModule],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
 export class Register {
-  signUpData: SignUpData = {
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  }
-
-  loading = false
-  errorMessage = ""
-  successMessage = ""
+  signupForm: FormGroup;
+  loading = false;
+  errorMessage = '';
+  successMessage = '';
 
   constructor(
+    private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router,
-  ) {}
+    private router: Router
+  ) {
+    this.signupForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  passwordMatchValidator(group: AbstractControl) {
+    const password = group.get('password')?.value;
+    const confirm = group.get('confirmPassword')?.value;
+    return password === confirm ? null : { passwordMismatch: true };
+  }
 
   onSubmit(): void {
-    this.errorMessage = ""
-    this.successMessage = ""
+    this.errorMessage = '';
+    this.successMessage = '';
 
-    // Validation
-    if (!this.signUpData.name || !this.signUpData.email || !this.signUpData.password) {
-      this.errorMessage = "All fields are required"
-      return
-    }
+    if (this.signupForm.invalid) return;
 
-    if (this.signUpData.password !== this.signUpData.confirmPassword) {
-      this.errorMessage = "Passwords do not match"
-      return
-    }
+    this.loading = true;
 
-    if (this.signUpData.password.length < 6) {
-      this.errorMessage = "Password must be at least 6 characters"
-      return
-    }
-
-    this.loading = true
-
-    this.authService.signUp(this.signUpData).subscribe({
+    this.authService.signUp(this.signupForm.value).subscribe({
       next: (result) => {
-        this.loading = false
+        this.loading = false;
         if (result.success) {
-          this.successMessage = result.message
-          setTimeout(() => {
-            this.router.navigate(["/login"])
-          }, 2000)
+          this.successMessage = result.message;
+          setTimeout(() => this.router.navigate(['/login']), 2000);
         } else {
-          this.errorMessage = result.message
+          this.errorMessage = result.message;
         }
       },
       error: () => {
-        this.loading = false
-        this.errorMessage = "An error occurred. Please try again."
-      },
-    })
+        this.loading = false;
+        this.errorMessage = 'An error occurred. Please try again.';
+      }
+    });
   }
 }

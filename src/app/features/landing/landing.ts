@@ -1,14 +1,12 @@
 import {Component, OnInit} from '@angular/core';
 import {NgForOf} from '@angular/common';
-import {Header} from '../../components/header/header';
-import {Footer} from '../../components/footer/footer';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-landing',
   imports: [
     NgForOf,
-    Header,
-    Footer
+    RouterLink,
   ],
   templateUrl: './landing.html',
   styleUrl: './landing.css'
@@ -41,6 +39,15 @@ export class Landing implements OnInit {
 
   supportedCities: City[] = [
     { name: "London", country: "United Kingdom", flag: "🇬🇧" },
+    { name: "Manchester", country: "United Kingdom", flag: "🇬🇧" },
+    { name: "Birmingham", country: "United Kingdom", flag: "🇬🇧" },
+    { name: "Johannesburg", country: "South Africa", flag: "🇿🇦" },
+    { name: "Cape Town", country: "South Africa", flag: "🇿🇦" },
+    { name: "New York", country: "USA", flag: "🇺🇸" },
+    { name: "Lagos", country: "Nigeria", flag: "🇳🇬" },
+    { name: "Nairobi", country: "Kenya", flag: "🇰🇪" },
+    { name: "Dubai", country: "UAE", flag: "🇦🇪" },
+    { name: "Mumbai", country: "India", flag: "🇮🇳" },
     { name: "Rome", country: "Italy", flag: "🇮🇹" },
     { name: "Berlin", country: "Germany", flag: "🇩🇪" },
     { name: "Warsaw", country: "Poland", flag: "🇵🇱" },

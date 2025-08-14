@@ -4,6 +4,7 @@
 /* Define your custom shades 100–500 using OKLCH or HEX/HSL */
 @theme {
   /* Primary - #004252 */
+  --color-primary-50: #e6f0f2;
   --color-primary-100: #e6f0f2;
   --color-primary-200: #b3d6de;
   --color-primary-300: #80bbc9;

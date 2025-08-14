@@ -14,4 +14,5 @@ export interface SendMoneyData {
   amount: number
   currency: "GBP" | "ZAR"
   recipient: string
+  paymentMethod: "card" | "ecocash" | "paypal"
 }

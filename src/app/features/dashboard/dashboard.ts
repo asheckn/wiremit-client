@@ -6,7 +6,7 @@ import {AuthService} from '../../core/services/auth-service';
 import {Router} from '@angular/router';
 import {AdsService} from '../../core/services/ads/ads-service';
 import {TransactionService} from '../../core/services/transaction/transaction-service';
-import {DatePipe, NgClass, NgForOf, NgIf, TitleCasePipe} from '@angular/common';
+import {CurrencyPipe, DatePipe, NgClass, NgForOf, NgIf, TitleCasePipe} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Sidebar} from '../../components/sidebar/sidebar';
 import {Header} from '../../components/header/header';
@@ -21,7 +21,7 @@ import {Header} from '../../components/header/header';
     FormsModule,
     NgIf,
     Sidebar,
-    Header
+    CurrencyPipe,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
@@ -35,6 +35,7 @@ export class Dashboard implements OnInit{
     amount: 0,
     currency: "GBP",
     recipient: "",
+    paymentMethod: "card",
   }
   calculatedFee = 0
   calculatedFinalAmount = 0
@@ -42,6 +43,7 @@ export class Dashboard implements OnInit{
   sendingMoney = false
   sendMoneyMessage = ""
   limits = { min: 10, max: 5000 }
+  calculatedPaymentMethodFee = 0
 
   // Ads Section
   ads: Ad[] = []
@@ -85,7 +87,7 @@ export class Dashboard implements OnInit{
     // Auto-rotate ads every 5 seconds
     setInterval(() => {
       this.nextAd()
-    }, 5000)
+    }, 10000)
   }
 
   onMenuItemClick(itemId: string): void {
@@ -108,10 +110,12 @@ export class Dashboard implements OnInit{
       this.calculatedFee = calculation.fee
       this.calculatedFinalAmount = calculation.finalAmount
       this.exchangeRate = calculation.exchangeRate
+      this.calculatedPaymentMethodFee = calculation.paymentMethodFee
     } else {
       this.calculatedFee = 0
       this.calculatedFinalAmount = 0
       this.exchangeRate = 0
+      this.calculatedPaymentMethodFee = 0
     }
   }
 
@@ -137,7 +141,7 @@ export class Dashboard implements OnInit{
         if (result.success) {
           this.sendMoneyMessage = "Money sent successfully!"
           // Reset form
-          this.sendMoneyData = { amount: 0, currency: "GBP", recipient: "" }
+          this.sendMoneyData = { amount: 0, currency: "GBP", recipient: "", paymentMethod: "card" }
           this.calculatedFee = 0
           this.calculatedFinalAmount = 0
           this.exchangeRate = 0
@@ -163,8 +167,9 @@ export class Dashboard implements OnInit{
 
   // Transaction History Methods
   loadTransactions(): void {
-    this.transactionService.getTransactions(this.currentPage, this.pageSize).subscribe((result) => {
+    this.transactionService.getTransactions(this.currentPage, this.pageSize).subscribe((result:any) => {
       this.transactions = result.transactions
+      console.log(this.transactions)
       this.totalTransactions = result.total
       this.totalPages = Math.ceil(this.totalTransactions / this.pageSize)
     })
@@ -180,7 +185,7 @@ export class Dashboard implements OnInit{
   // Utility Methods
   logout(): void {
     this.authService.logout()
-    this.router.navigate(["/login"])
+    this.router.navigate(["/"])
   }
 
   getStatusClass(status: string): string {
